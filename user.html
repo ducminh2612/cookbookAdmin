@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href='https://unpkg.com/boxicons@2.0.9/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+    <title>Quản lý tài khoản</title>
+    <style>
+        a,
+        li,
+        ul {
+            padding: 0;
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+    <section id="sidebar">
+        <!-- Sidebar content -->
+    </section>
+    <section id="content">
+        <nav>
+            <!-- Navigation content -->
+        </nav>
+        <main>
+            <h4 class="text-center mt-4">Quản lý tài khoản</h4>
+            <table id="account-list" class="table table-hover table-bordered">
+                <thead>
+                    <tr>
+                        <th>Email</th>
+                        <th>UID</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </main>
+    </section>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDb6l5NL5KoTikbUwF-Bzxhl3i_Ig9h2Gk",
+            authDomain: "cookbook-35a9e.firebaseapp.com",
+            databaseURL: "https://cookbook-35a9e-default-rtdb.firebaseio.com",
+            projectId: "cookbook-35a9e",
+            storageBucket: "cookbook-35a9e.appspot.com",
+            messagingSenderId: "598777255184",
+            appId: "1:598777255184:web:56624e2f7b5a621b544195"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const accountList = document.getElementById("account-list").querySelector("tbody");
+
+            function fetchAccounts() {
+                fetch('/api/users') // Endpoint của Cloud Function hoặc server của bạn
+                    .then(response => response.json())
+                    .then(users => {
+                        accountList.innerHTML = "";
+                        users.forEach(user => {
+                            accountList.innerHTML += `
+                                <tr>
+                                    <td>${user.email || 'N/A'}</td>
+                                    <td>${user.uid}</td>
+                                    <td>
+                                        <button onclick="deleteAccount('${user.uid}')" class="btn btn-danger btn-sm">Xóa</button>
+                                    </td>
+                                </tr>
+                                `;
+                        });
+                    })
+                    .catch(error => {
+                        console.error("Có lỗi khi lấy danh sách tài khoản: ", error);
+                    });
+            }
+
+            window.deleteAccount = function(uid) {
+                Swal.fire({
+                    title: 'Bạn có chắc không?',
+                    text: "Tài khoản sẽ bị xóa vĩnh viễn!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Xóa',
+                    cancelButtonText: 'Hủy'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        fetch(`/api/deleteUser/${uid}`, {
+                            method: 'DELETE'
+                        })
+                        .then(response => response.json())
+                        .then(() => {
+                            Swal.fire('Xóa!', 'Tài khoản đã được xóa.', 'success');
+                            fetchAccounts();
+                        })
+                        .catch((error) => {
+                            console.error("Có lỗi khi xóa tài khoản: ", error);
+                        });
+                    }
+                });
+            }
+
+            fetchAccounts();
+        });
+    </script>
+</body>
+
+</html>
